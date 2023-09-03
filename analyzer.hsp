@@ -1,4 +1,4 @@
-#module _analizer
+#module _analyzer
 
 #deffunc analize var order,array x
 	order2=strmid(order,4,4096)

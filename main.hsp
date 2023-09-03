@@ -5,7 +5,7 @@
 
 #include "hspext.as"
 #include"screen.hsp"
-#include"analizer.hsp"
+#include"analyzer.hsp"
 
 //‰Šú‰»
 *_initialize
