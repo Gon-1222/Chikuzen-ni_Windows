@@ -1,0 +1,60 @@
+#module _analizer
+
+#deffunc analize var order,array x
+	order2=strmid(order,4,4096)
+	repeat
+		buf=instr(order2,0,",")
+		if buf=-1:buf=1024
+		buf1 = strmid(order2,0,buf)
+		x(cnt)=strtrim(buf1,3,' ')
+		order2=strmid(order2,instr(order2,0,",")+1,1024)
+		wait 1
+		if flag=1:flag=0:break
+		if instr(order2,0,",")=-1:flag=1
+	loop
+	return
+	
+//チェックサム
+#deffunc checksum var data
+	//最後のインデックス取得
+	repeat
+		if instr(data, index, ",") = -1 : index - 1 : break
+		index = instr(data, index, ",")+index+1
+		wait 1
+	loop
+	//受信SUM取得
+	pari = strmid(data, index+1, 6)
+	//データ足し合わせ
+	repeat
+		if cnt >= index:break
+		sum = sum + peek(data, cnt)
+		wait 1
+	loop
+	//戻り値（合格:1,失敗:0）
+	if int(sum) = int(pari) : check = 1 : else : check = 0
+	return check
+	
+//チェックサム作成
+#deffunc makesum var data
+	
+	repeat
+		if cnt >= strlen(data):break
+		sum = sum + peek(data, cnt)
+		wait 1
+	loop
+	return sum
+
+#global
+/*
+x="res hoge hage, higehuge, hogehoge, 3014"
+sdim y,64,5
+analize x,y*/
+/*
+x="res hogehage,higehuge,hogehoge, 2950"
+//x="A,65"
+checksum x
+
+dialog stat
+x="res hogehage, higehuge, hogehoge"
+makesum x
+dialog stat*/

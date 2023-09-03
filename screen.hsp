@@ -1,0 +1,79 @@
+#module screen_pen
+#deffunc draw_screen var _set,var _canc
+	screen 0,280,470,0
+	cls 1
+	title "筑前煮 -　親機設定ソフト"
+	objmode 2
+
+	font "ＭＳ ゴシック",20,0
+	pos 80,10
+	mes "筑前煮の設定"
+
+	font "ＭＳ ゴシック",12,0
+	pos 20,100
+	Network=""
+	input Network,240,20
+
+	pos 20,160
+	User=""
+	input User,240,20
+
+	pos 20,220
+	password=""
+	input password,240,20
+
+	pos 20,340
+	proxy_domain=""
+	input proxy_domain,190,20
+
+	pos 230,340
+	proxy_port=3128
+	input proxy_port,30,20
+
+	font "ＭＳ ゴシック",15,0
+	pos 20,80
+	mes "ネットワーク名"
+
+	line 269,70,10,70
+	line 269,289,269,70
+	line 10,289,269,289
+	line 10,70,10,289
+
+	pos 10,50
+	mes "Wi-Fiの設定"
+
+	pos 20,140
+	mes "ユーザー名(エンタープライズ)"
+
+	pos 20,200
+	mes "パスワード"
+
+	pos 10,300
+	mes "プロキシの設定"
+
+	font "ＭＳ ゴシック",12,0
+	objsize 150,20
+	pos 60,260
+	enter_pri=0
+	font "",15
+	objmode 2,0
+	chkbox "エンタープライズ方式",chkbox2
+	
+	font "",12
+	pos 20,326
+	mes "ドメイン"
+
+	pos 230,326
+	mes "ポート"
+	
+	pos 10,455
+	mes "情報：スタートアップ中
+
+	objsize 90,20
+	pos 30,400
+	button gosub "設定",_Set
+
+	pos 160,400
+	button gosub"キャンセル",_canc
+	return
+#global
