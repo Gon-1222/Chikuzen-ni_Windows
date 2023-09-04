@@ -1,7 +1,169 @@
+/*--------------------------------------*/
+/*-筑前煮 - Windows側シリアル通信設定AP-*/
+/*-------------2023/09/04---------------*/
+/*--------------------------------------*/
+#packopt icon "icon.ico"
 #include "hspext.as"
-dim a , 4
-	comstat a
-	mes a(0)
-	mes a(1)
-	mes a(2)
-	mes a(3)
+#include"screen.hsp"
+#include"analyzer.hsp"
+
+//初期化
+*_initialize
+	onexit *_end
+	settings_buf=*_settings//設定ラベル
+	cancel_buf=*_end//終了ラベル
+	send_data=""//送信データバッファ
+	received=""//受信データバッファ
+	port_num=3//COMポート番号
+	send_data=""//送信するリクエストデータ
+	received_buf=""//受信データバッファ
+	sdim params,512,5
+
+//初期画面描画
+*_screen
+	draw_screen settings_buf,cancel_buf
+
+//COMポートオープン
+*_begin
+	//設定ボタン無効化
+	objenable 6,0
+	//ステータス描画
+	stat_info="既存の設定情報を読み込んでいます...":gosub *_update
+	//シリアル通信初期化
+	comopen port_num,"baud=9600 parity=N data=8 stop=1"
+	if stat{
+		stat_info="接続失敗、機器の状態を確認してください...":gosub *_update
+		wait 100
+		repeat 5
+		stat_info="接続失敗、"+int(5-cnt)+"秒後に再試行します...":gosub *_update
+		await 1000
+		loop
+		stat_info="接続失敗、再試行しています...":gosub *_update	
+		gosub *_begin
+		
+		}
+	wait 1
+	//画面反映用初期リクエスト
+
+	//Wi-Fiデータ/プロキシデータそれぞれに対して
+	repeat 2
+	send_data="req 1,"+ str(int(cnt+1))
+	gosub *_req
+	//取得データの画面反映
+		if cnt=0{
+			gosub *_link0
+		}
+	if cnt=1{
+			gosub *_link1
+		}
+	loop
+	//設定ボタン有効化
+	objenable 6,1
+stop
+
+//設定通信
+*_settings
+	//設定ボタン無効化
+	objenable 6,0
+*_settings_wifi
+	stat_info="Wi-Fi設定情報を送信しています...":gosub *_update	
+	if enter_pri=0{
+		send_data="req 2, 1, "+Network+", ,"+password
+	}
+	else{
+		send_data="req 2, 1, "+Network+","+User+","+password
+	}
+	gosub *_req	
+	if param(1) != Network or param(2) != User or param(3) != password{
+	stat_info="設定失敗、１秒後に再試行します...":gosub *_update
+	wait 100
+	stat_info="設定失敗、再試行しています...":gosub *_update
+		goto *_settings_wifi
+	}
+	gosub *_link0
+*settings_http
+	stat_info="プロキシ設定情報を送信しています...":gosub *_update	
+	send_data="req 2, 2, "+ proxy_domain +","+proxy_port
+	gosub *_req	
+	if param(1) != proxy_domain or param(2) != proxy_port{
+	stat_info="設定失敗、１秒後に再試行します...":gosub *_update
+	wait 100
+	stat_info="設定失敗、再試行しています...":gosub *_update
+		goto *_settings_wifi
+	}
+	gosub *_link1
+	//設定ボタン有効化
+	objenable 6,1	
+	return
+
+//画面反映(Wi-Fi)
+*_link0
+	objprm 0,params(1)
+	objprm 1,params(2)
+	objprm 2,params(3)
+	objprm 5,(param(2)!"")
+	return
+//画面反映(HTTP)
+*_link1
+	objprm 3,params(1)
+	objprm 4,int(params(2))
+	return
+//画面更新
+*_update
+	redraw 0
+	color 255,255,255
+	boxf 0,450,280,470
+	color 0,0,0
+	pos 10,455
+	mes "情報："+stat_info
+	redraw 1
+	return
+//終了
+*_end
+	comclose
+	end
+
+//リクエスト送信
+*_req
+	//データの送信
+	makesum send_data
+	send_data = send_data + "," + str(stat) + ";"
+	comput send_data
+	//データの受信
+	repeat
+		comget received,1024
+		if stat!0{
+			break
+		}
+		wait 1
+	loop
+	//受信バッファ
+	notesel received_buf
+	noteadd str(received)
+	stat_info="受信情報を分析しています...":gosub *_update
+	
+	//命令部切り出し
+	order=strmid(received_buf,instr(received_buf,0,"res"),instr(received_buf,0,";")-instr(received_buf,0,"res"))
+	//チェックサムの実行
+	checksum order
+	if stat=0{
+		stat_info="データ受信失敗、１秒後に再試行します...":gosub *_update
+		await 1000
+		stat_info="データ受信失敗、再試行しています...":gosub *_update	
+		goto *_req
+		}
+	//パラメータ分析
+	analize order,params
+	//相手側受信失敗
+	if int(params(0))=2{
+		stat_info="データ送信失敗、１秒後に再試行します...":gosub *_update
+		await 1000
+		stat_info="データ送信失敗、再試行しています...":gosub *_update	
+		goto *_req
+		}
+	if int(params(0)=1){
+		stat_info="親機エラー、製作元に問い合わせてください...":gosub *_update
+		dialog "親機との通信にエラーが発生しました。\n再度お試しください。",1,"エラー"
+		goto *_begin
+		}
+	return

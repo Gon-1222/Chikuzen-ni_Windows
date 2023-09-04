@@ -12,23 +12,23 @@
 	font "ＭＳ ゴシック",12,0
 	pos 20,100
 	Network=""
-	input Network,240,20
+	input Network,240,20//0
 
 	pos 20,160
 	User=""
-	input User,240,20
+	input User,240,20//1
 
 	pos 20,220
 	password=""
-	input password,240,20
+	input password,240,20//2
 
 	pos 20,340
 	proxy_domain=""
-	input proxy_domain,190,20
+	input proxy_domain,190,20//3
 
 	pos 230,340
 	proxy_port=3128
-	input proxy_port,30,20
+	input proxy_port,30,20//4
 
 	font "ＭＳ ゴシック",15,0
 	pos 20,80
@@ -57,7 +57,7 @@
 	enter_pri=0
 	font "",15
 	objmode 2,0
-	chkbox "エンタープライズ方式",chkbox2
+	chkbox "エンタープライズ方式",chkbox2//5
 	
 	font "",12
 	pos 20,326
@@ -71,9 +71,9 @@
 
 	objsize 90,20
 	pos 30,400
-	button gosub "設定",_Set
+	button gosub "設定",_Set//6
 
 	pos 160,400
-	button gosub"キャンセル",_canc
+	button gosub"終了",_canc//7
 	return
 #global
